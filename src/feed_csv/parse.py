@@ -8,8 +8,10 @@ def load_root(data):
     """data: bytes. Refuses DOCTYPE/ENTITY (entity-expansion attacks) and huge files."""
     if len(data) > MAX_BYTES:
         raise ValueError("feed is larger than %d MB" % (MAX_BYTES // 1024 // 1024))
-    head = data[:4096].lower()
-    if b"<!doctype" in head or b"<!entity" in data[:65536].lower():
+    if b"\x00" in data:
+        raise ValueError("UTF-16/32 feeds are not supported; save the feed as UTF-8")
+    low = data.lower()  # the whole file: a DOCTYPE can follow a long comment
+    if b"<!doctype" in low or b"<!entity" in low:
         raise ValueError("DOCTYPE/ENTITY declarations are not allowed in feeds")
     try:
         return ET.fromstring(data)

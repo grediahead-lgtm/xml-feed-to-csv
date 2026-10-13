@@ -28,6 +28,13 @@ class ParseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_root(bomb)
 
+    def test_doctype_after_long_padding_and_utf16_are_refused(self):
+        padded = b'<?xml version="1.0"?><!--' + b"x" * 100000 + b'--><!DOCTYPE x [<!ENTITY a "aaaa">]><x>&a;</x>'
+        with self.assertRaises(ValueError):
+            load_root(padded)
+        with self.assertRaises(ValueError):
+            load_root('<?xml version="1.0" encoding="utf-16"?><!DOCTYPE x><x/>'.encode("utf-16"))
+
     def test_invalid_xml_has_a_clear_message(self):
         with self.assertRaises(ValueError) as cm:
             load_root(b"<a><b></a>")
